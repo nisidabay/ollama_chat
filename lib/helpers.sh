@@ -10,7 +10,7 @@ handle_web() {
 
 # Launch a new detached terminal
 handle_terminal() {
-	setsid "$TERMINAL" >/dev/null 2>&1 &
+	"$TERMINAL" &
 }
 
 # Analyze an image (JPG/PNG) using the configured vision model
@@ -41,13 +41,7 @@ handle_vision() {
 		return 1
 	fi
 
-	# Warn about large images (>5MB)
-	local image_size
-	image_size=$(stat -c%s "$selected_file" 2>/dev/null || stat -f%z "$selected_file" 2>/dev/null)
-	if [[ "$image_size" -gt 5242880 ]]; then
-		echo "⚠️ Large image ($(numfmt --to=iec-i --suffix=B "$image_size" 2>/dev/null || echo "${image_size}B"))"
-		echo "💡 Resize to <5MB for better results"
-	fi
+	
 
 	# Get user prompt
 	echo ""
@@ -57,24 +51,25 @@ handle_vision() {
 		return 0
 	fi
 
-	# Convert image to base64 (Linux base64 — no -i flag)
+	# Convert image to base64 (macOS vs Linux)
 	echo "🧠 Analyzing with $VISION_MODEL..."
 	local base64_data
-	base64_data=$(base64 "$selected_file" | tr -d '\n')
+	if [[ "$(uname)" == "Darwin" ]]; then
+		base64_data=$(base64 "$selected_file")
+	else
+		base64_data=$(base64 "$selected_file" | tr -d '\n')
+	fi
 
 	# Use temp file for JSON payload to avoid "Argument list too long"
 	local json_payload
 	json_payload=$(mktemp)
 	trap 'rm -f "$json_payload"' RETURN
 
-	cat >"$json_payload" <<EOF
-{
-  "model": "$VISION_MODEL",
-  "prompt": "$user_prompt",
-  "images": ["$base64_data"],
-  "stream": false
-}
-EOF
+	jq -n \
+		--arg model "$VISION_MODEL" \
+		--arg prompt "$user_prompt" \
+		--arg img "$base64_data" \
+		'{model: $model, prompt: $prompt, images: [$img], stream: false}' > "$json_payload"
 
 	# Call vision model via REST API
 	local response
