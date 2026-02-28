@@ -111,20 +111,27 @@ Type `exit` or `quit` to leave cleanly.
 
 | Command                | Description                                          |
 |------------------------|------------------------------------------------------|
+| **Usage**              |                                                      |
 | `!menu` / `!m`         | Show the help menu                                   |
-| `!clear`               | Clear chat history                                   |
-| `!history` / `!his`    | View full conversation history                       |
-| `!last`                | Copy last AI response to clipboard                   |
-| `!new_chat` / `!new`   | Start a new chat (clears history)                    |
-| `!save` / `!sa`        | Save current chat to disk                            |
-| `!load` / `!lo`        | Load a saved chat session                            |
+| **History**            |                                                      |
+| `!clear`               | Clear the chat history                               |
+| `!history` / `!his`    | View the chat history                                |
+| `!last`                | Copy last response to clipboard                      |
+| **Chat**               |                                                      |
+| `!load` / `!lo`        | Load a saved chat                                    |
+| `!save` / `!sa`        | Save current chat                                    |
+| `!edit_saved` / `!es`  | Edit a saved chat                                    |
+| `!new_chat` / `!new`   | Start a new chat                                     |
 | `!rm`                  | Remove a saved chat                                  |
-| `!edit_saved` / `!es`  | Edit a saved chat in your pager                      |
+| **Models**             |                                                      |
 | `!switch` / `!sw`      | Switch AI model on the fly                           |
-| `!web`                 | Launch a background web search                       |
-| `!vision` / `!img`     | Analyze an image (JPG/PNG) with the vision model     |
+| **Helpers**            |                                                      |
+| `!web`                 | Search the web                                       |
+| `!terminal` / `!t`     | Launch a new detached terminal                       |
+| `!vision` / `!img`     | Analyze image (JPG/PNG only)                         |
 | `!agent` / `!a`        | Switch agent persona                                 |
-| `!terminal` / `!t`     | Open a new detached terminal                         |
+| **Script**             |                                                      |
+| `!edit_config` / `!ec` | Edit `lola.conf` inline                              |
 | `!kill` / `!k`         | Stop Ollama server and exit                          |
 | `exit` / `quit`        | Quit the script                                      |
 
@@ -162,6 +169,9 @@ PAGER=nvim
 
 # Browser for web_search.sh (change to: chromium, brave, xdg-open, etc.)
 BROWSER="firefox"
+
+# Default directory for vision OCR images (leave empty to search $HOME)
+IMAGE_DIR="$HOME/Pictures/Screenshots/"
 
 # Search engines for web_search.sh
 declare -A SEARCH_ENGINES_CONF
