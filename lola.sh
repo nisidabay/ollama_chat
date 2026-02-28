@@ -33,7 +33,6 @@ if [[ -f "$SCRIPT_DIR/.lola_history.log" && ! -f "$CHAT_HISTORY_FILE" ]]; then
 fi
 
 WEB_SEARCH="$SCRIPT_DIR/web_search.sh"
-IMAGE_DIR="$HOME/Pictures/Screenshots/"
 
 # Load configuration
 if [[ -f "$CONFIG_FILE" ]]; then
@@ -172,6 +171,7 @@ main() {
 			"!rm")                 handle_remove ;;
 			"!web")                handle_web ;;
 			"!terminal" | "!t")    handle_terminal ;;
+			"!edit_config" | "!ec") handle_edit_config ;;
 			"!edit_saved" | "!es") handle_edit_saved_chat ;;
 			"!vision" | "!img")    handle_vision ;;
 			"!agent" | "!a")       handle_agent ;;
