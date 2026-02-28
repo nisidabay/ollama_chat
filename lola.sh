@@ -8,8 +8,30 @@
 # Install Ollama:  curl -fsSL https://ollama.com/install.sh | sh
 # Pull a model:    ollama pull llama3.2:latest  (or any model from ollama.com/library)
 
-SCRIPT_DIR="$HOME/bin/ollama_chat/"
-CONFIG_FILE="$SCRIPT_DIR/lola.conf"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+# XDG Base Directory Support
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+LOLA_CONFIG_DIR="$XDG_CONFIG_HOME/lola"
+LOLA_CACHE_DIR="$XDG_CACHE_HOME/lola"
+LOLA_SESSION_DIR="$LOLA_CACHE_DIR/sessions"
+
+# Create directories
+mkdir -p "$LOLA_CONFIG_DIR"
+mkdir -p "$LOLA_SESSION_DIR"
+
+CONFIG_FILE="$LOLA_CONFIG_DIR/lola.conf"
+CHAT_HISTORY_FILE="$LOLA_CACHE_DIR/history.log"
+
+# Migrate old config/history if they exist in SCRIPT_DIR
+if [[ -f "$SCRIPT_DIR/lola.conf" && ! -f "$CONFIG_FILE" ]]; then
+	mv "$SCRIPT_DIR/lola.conf" "$CONFIG_FILE"
+fi
+if [[ -f "$SCRIPT_DIR/.lola_history.log" && ! -f "$CHAT_HISTORY_FILE" ]]; then
+	mv "$SCRIPT_DIR/.lola_history.log" "$CHAT_HISTORY_FILE"
+fi
+
 WEB_SEARCH="$SCRIPT_DIR/web_search.sh"
 IMAGE_DIR="$HOME/Pictures/Screenshots/"
 
@@ -21,9 +43,8 @@ fi
 
 # Global state
 CURRENT_AGENT_CONTEXT=""
-VERSION='1.6'
+VERSION='1.8'
 PROMPT="You: "
-CHAT_HISTORY_FILE="$SCRIPT_DIR/.lola_history.log"
 touch "$CHAT_HISTORY_FILE"
 
 # ── Dependency checker ───────────────────────────────────────────────────────
@@ -43,10 +64,14 @@ check_dependencies() {
 	fi
 }
 
-# ── Environment detection (Wayland vs X11) ───────────────────────────────────
+# ── Environment detection (macOS vs Linux) ───────────────────────────────────
 # Only TERMINAL and COPY_CMD differ per display server.
 # All menus use gum filter (pure terminal, identical on both).
-if [[ -n "$WAYLAND_DISPLAY" ]]; then
+if [[ "$(uname)" == "Darwin" ]]; then
+    check_dependencies "pbcopy"
+    TERMINAL="open -a Terminal"
+    COPY_CMD="pbcopy"
+elif [[ -n "$WAYLAND_DISPLAY" ]]; then
 	check_dependencies "foot" "wl-copy"
 	TERMINAL="foot"
 	COPY_CMD="wl-copy"
@@ -116,9 +141,9 @@ main() {
 		fi
 
 		# Multi-line paste (Ctrl+D)
-		if read -t 0 -r pasted_text; then
+		if read -t 0 -r _; then
 			rest_of_input=$(cat)
-			full_prompt="$user_ask"$'\n'"$pasted_text"
+			full_prompt="$user_ask"
 			[[ -n "$rest_of_input" ]] && full_prompt+=$'\n'"$rest_of_input"
 			handle_chat "$full_prompt"
 		else
