@@ -8,7 +8,9 @@
 
 # Determine the directory of the current script
 SCRIPT_DIR_WEB="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-CONFIG_FILE="$SCRIPT_DIR_WEB/lola.conf"
+
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+CONFIG_FILE="$XDG_CONFIG_HOME/lola/lola.conf"
 
 # Source the configuration file
 if [[ -f "$CONFIG_FILE" ]]; then
