@@ -38,7 +38,11 @@ get_model() {
 	else
 		# Persist the new model to the config file
 		printf -v selected_model_quoted '"%s"' "$selected_model"
-		sed -i "s#MODEL=.*#MODEL=$selected_model_quoted#" "$CONFIG_FILE"
+		if [[ "$(uname)" == "Darwin" ]]; then
+			sed -i '' "s#MODEL=.*#MODEL=$selected_model_quoted#" "$CONFIG_FILE"
+		else
+			sed -i "s#MODEL=.*#MODEL=$selected_model_quoted#" "$CONFIG_FILE"
+		fi
 		echo "$selected_model"
 	fi
 }
