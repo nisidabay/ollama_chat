@@ -23,8 +23,8 @@ handle_last() {
 	local last_response
 
 	# Extract last AI response (after last "🤖 AI:" marker)
-	last_response=$(tac "$CHAT_HISTORY_FILE" 2>/dev/null |
-		awk '/^🤖 AI:/ {p=1; next} p && NF {print; exit}' | tac)
+	last_response=$(tail -r "$CHAT_HISTORY_FILE" 2>/dev/null |
+		awk '/^🤖 AI:/ {p=1; next} p && NF {print; exit}' | tail -r)
 
 	if [[ -n "$last_response" ]]; then
 		echo "$last_response" | $COPY_CMD
@@ -46,9 +46,9 @@ handle_chat() {
 	# Strip ANSI codes from PROMPT for logging
 	LOG_PROMPT=$(echo "$PROMPT" | sed $'s/\x1b\\[[0-9;]*[mGKH]//g')
 
-	# Read existing conversation from history file (safe, non-destructive)
+	# Read existing conversation from history file (limited to last 200 lines to preserve context window)
 	if [[ -s "$CHAT_HISTORY_FILE" ]]; then
-		conversation_history=$(<"$CHAT_HISTORY_FILE")
+		conversation_history=$(tail -n 200 "$CHAT_HISTORY_FILE")
 	fi
 
 	# Build prompt: honesty context + optional agent + history + user input
@@ -81,9 +81,12 @@ handle_chat() {
 		# Copy response to clipboard
 		echo "$response" | $COPY_CMD
 
-		# Desktop notification (only if notify-send is available)
-		command -v notify-send &>/dev/null && \
+		# Desktop notification (macOS vs Linux)
+		if [[ "$(uname)" == "Darwin" ]]; then
+			osascript -e 'display notification "Response ready!" with title "LOLA"'
+		elif command -v notify-send &>/dev/null; then
 			notify-send -u normal "LOLA" "Response ready!" --icon=dialog-information
+		fi
 
 		echo
 		ui_sep
