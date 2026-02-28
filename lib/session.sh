@@ -17,7 +17,7 @@ handle_save() {
 		filename="${filename:-chat_$(date +%Y%m%d_%H%M).txt}"
 		[[ "$filename" != *.txt ]] && filename="$filename.txt"
 
-		dest="$SCRIPT_DIR$filename"
+		dest="$LOLA_SESSION_DIR/$filename"
 
 		if cp "$CHAT_HISTORY_FILE" "$dest" 2>/dev/null; then
 			echo "✅ Saved to $dest"
@@ -34,12 +34,12 @@ handle_remove() {
 	local load_chat
 	local confirm
 
-	if ! find "$SCRIPT_DIR" -maxdepth 1 -type f -name "*.txt" -print -quit | read; then
+	if ! find "$LOLA_SESSION_DIR" -maxdepth 1 -type f -name "*.txt" -print -quit | read; then
 		echo "📜 No chat sessions available to remove."
 		return 1
 	fi
 
-	load_chat=$(find "$SCRIPT_DIR" -maxdepth 1 -type f -name "*.txt" 2>/dev/null |
+	load_chat=$(find "$LOLA_SESSION_DIR" -maxdepth 1 -type f -name "*.txt" 2>/dev/null |
 		menu "Remove chat: ")
 
 	if [[ -z "$load_chat" ]]; then
@@ -67,12 +67,12 @@ handle_remove() {
 handle_edit_saved_chat() {
 	local selected_file
 
-	if ! find "$SCRIPT_DIR" -maxdepth 1 -type f -name "*.txt" -print -quit | read; then
+	if ! find "$LOLA_SESSION_DIR" -maxdepth 1 -type f -name "*.txt" -print -quit | read; then
 		echo "📜 No chat sessions available to edit."
 		return 1
 	fi
 
-	selected_file=$(find "$SCRIPT_DIR" -maxdepth 1 -type f -name "*.txt" 2>/dev/null |
+	selected_file=$(find "$LOLA_SESSION_DIR" -maxdepth 1 -type f -name "*.txt" 2>/dev/null |
 		menu "Edit chat session: ")
 
 	if [[ -z "$selected_file" ]]; then
@@ -94,12 +94,12 @@ handle_edit_saved_chat() {
 handle_load() {
 	local load_chat
 
-	if ! find "$SCRIPT_DIR" -maxdepth 1 -type f -name "*.txt" -print -quit | read; then
+	if ! find "$LOLA_SESSION_DIR" -maxdepth 1 -type f -name "*.txt" -print -quit | read; then
 		echo "📜 No chat sessions available to restore."
 		return 1
 	fi
 
-	load_chat=$(find "$SCRIPT_DIR" -maxdepth 1 -type f -name "*.txt" 2>/dev/null |
+	load_chat=$(find "$LOLA_SESSION_DIR" -maxdepth 1 -type f -name "*.txt" 2>/dev/null |
 		menu "Restore chat session: ")
 
 	if [[ -z "$load_chat" ]]; then
