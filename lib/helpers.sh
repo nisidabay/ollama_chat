@@ -24,9 +24,16 @@ handle_vision() {
 		return 1
 	fi
 
+	# Fallback if IMAGE_DIR is not set or not a directory
+	local search_dir="${IMAGE_DIR:-$HOME}"
+	if [[ ! -d "$search_dir" ]]; then
+		echo "⚠️  Configured IMAGE_DIR '$search_dir' does not exist. Falling back to $HOME"
+		search_dir="$HOME"
+	fi
+
 	# Select image file using fzf
 	local selected_file
-	selected_file=$(find "$IMAGE_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) 2>/dev/null |
+	selected_file=$(find "$search_dir" -maxdepth 5 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) 2>/dev/null |
 		fzf --prompt='Image: ' --height=40% --border)
 
 	if [[ -z "$selected_file" ]]; then
