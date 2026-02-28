@@ -119,3 +119,16 @@ handle_load() {
 		return 1
 	fi
 }
+
+# Edit the configuration file inline
+handle_edit_config() {
+	echo "✏️ Opening '$CONFIG_FILE' in '${EDITOR:-vi}'..."
+	"${EDITOR:-vi}" "$CONFIG_FILE"
+	
+	# Reload config after editing
+	if [[ -f "$CONFIG_FILE" ]]; then
+		#shellcheck disable=SC1090
+		source "$CONFIG_FILE"
+		echo "✅ Configuration reloaded."
+	fi
+}
