@@ -10,6 +10,7 @@ No API keys. No cloud. No fees. Everything runs locally on your machine.
 
 ## ✨ Features
 
+- 🖥️ **Cross-Platform** — Works on Linux (X11/Wayland) and macOS.
 - 🎨 **Rich terminal UI** — `figlet` ASCII banner, `gum`-styled borders, animated spinner
 - 🖥️ **Unified inline menus** — `gum filter` fuzzy search, stays inside the
 terminal on both X11 and Wayland
@@ -71,13 +72,15 @@ ollama pull ministral-3b          # CPU / low VRAM
 ### 3. Install script dependencies
 
 ```bash
+# macOS (using Homebrew)
+brew install figlet fzf jq curl neovim gum
+
 # Arch Linux
-sudo pacman -S figlet fzf jq curl neovim xsel
+sudo pacman -S figlet fzf jq curl neovim xsel gum
 
 # Debian / Ubuntu
 sudo apt install figlet fzf jq curl neovim xsel
-
-# gum (all distros) — https://github.com/charmbracelet/gum#installation
+# gum is installed manually, see https://github.com/charmbracelet/gum#installation
 ```
 
 ### 4. Clone and run
@@ -132,7 +135,6 @@ Type `exit` or `quit` to leave cleanly.
 ```
 ollama_chat/
 ├── lola.sh       # Entry point (~140 lines)
-├── lola.conf     # Configuration (models, agents, search engines)
 ├── web_search.sh           # Web search helper
 └── lib/
     ├── ui.sh               # Banner, separators, styled output, help menu
@@ -142,12 +144,15 @@ ollama_chat/
     └── helpers.sh          # Web search, terminal launcher, vision analysis
 ```
 
+LOLA seamlessly stores your active configurations and sessions via the XDG Base Directory specification:
+- **Configuration** (`lola.conf`): `~/.config/lola/lola.conf`
+- **Session DB & History**: `~/.cache/lola/`
+
 ---
 
 ## ⚙️ Configuration
 
-Edit `lola.conf` to customize, though MODEL is updated with the !switch | !sw
-commands:
+Edit `~/.config/lola/lola.conf` to customize, though MODEL is updated with the `!switch` | `!sw` commands:
 
 ```conf
 MODEL="qwen3:4b"
@@ -185,6 +190,7 @@ AGENTS_CONF[concise]="Be extremely concise. Give only the answer, no filler."
 | `jq`       | JSON parsing for vision API              | ✅ Yes        |
 | `curl`     | Vision model API calls                   | ✅ Yes        |
 | `nvim`     | Default pager/editor                     | ✅ Yes        |
+| `pbcopy`   | Clipboard on macOS                       | macOS only    |
 | `wl-copy`  | Clipboard on Wayland                     | Wayland only  |
 | `foot`     | Terminal launcher on Wayland             | Wayland only  |
 | `xsel`     | Clipboard on X11                         | X11 only      |
@@ -198,7 +204,7 @@ AGENTS_CONF[concise]="Be extremely concise. Give only the answer, no filler."
 |--------------------------------|--------------------------------------------------|
 | No models in `ollama list`     | Run `ollama pull llama3.2:latest`                |
 | Model too slow                 | Switch to a smaller model (see hardware table)   |
-| Clipboard not working          | Check `xsel` (X11) or `wl-copy` (Wayland)       |
+| Clipboard not working          | Check `xsel` (X11), `wl-copy` (Wayland), or `pbcopy` (macOS) |
 | Script exits prematurely       | Check Ollama is running: `pgrep ollama`          |
 | Vision model not found         | Run `ollama pull <VISION_MODEL>`                 |
 | Spinner flickers at start      | Ensure `gum` ≥ 0.14 is installed                |
@@ -208,7 +214,7 @@ AGENTS_CONF[concise]="Be extremely concise. Give only the answer, no filler."
 ## 📝 Notes
 
 - In **tmux**, the prompt turns red and a warning is shown. Use **Ctrl+C** to quit.
-- All chat logs are stored locally — no internet required for chat.
+- All chat logs are stored locally (`~/.cache/lola/`) — no internet required for chat.
 - When switching models, the previous one is stopped cleanly via `ollama stop`.
 - The script prompts for a model via `gum filter` if none is set in the config.
 
