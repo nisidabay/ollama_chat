@@ -6,6 +6,8 @@
 
 -   XDG Base Directory standard support. Configuration is now stored in `~/.config/lola` and cache/sessions in `~/.cache/lola`.
 -   Context window protection limit. History appended to the context is now limited to the last 200 lines to prevent prompt window overflow on long sessions.
+-   `!edit_config` (or `!ec`) command to open and edit the active `lola.conf` inline (applies immediately upon saving).
+-   `IMAGE_DIR` is now a configurable variable inside `lola.conf` rather than being hardcoded.
 
 ### Changed
 
