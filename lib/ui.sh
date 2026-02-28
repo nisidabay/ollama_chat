@@ -78,6 +78,7 @@ show_menu() {
 		gum style --foreground 245 "  !agent | !a        Switch agent persona"
 		echo ""
 		gum style --foreground 212 --bold "Script"
+		gum style --foreground 245 "  !edit_config | !ec Edit lola.conf inline"
 		gum style --foreground 245 "  !kill | !k         Stop Ollama and exit"
 		gum style --foreground 245 "  exit | quit        Quit the script"
 		echo ""
