@@ -16,7 +16,7 @@ No API keys. No cloud. No fees. Everything runs locally on your machine.
 terminal on both X11 and Wayland
 - 📋 **Auto clipboard** — every response is copied automatically (`wl-copy` / `xsel`)
 - 💾 **Session management** — save, load, edit, and remove named chat sessions
-- 🔄 **Live model switching** — swap models mid-conversation with `!switch`
+- 🔄 **Live model switching** — swap chat model with `!switch`, vision model with `!sw_vision`
 - 🕵️ **Agent personas** — switch system prompts (Coder, Writer, Teacher…) with `!agent`
 - 📅 **Honesty protocol** — current date injected; model instructed not to hallucinate
 - 🖼️ **Vision analysis** — analyze images via a local vision model with `!vision`
@@ -124,7 +124,8 @@ Type `exit` or `quit` to leave cleanly.
 | `!new_chat` / `!new`   | Start a new chat                                     |
 | `!rm`                  | Remove a saved chat                                  |
 | **Models**             |                                                      |
-| `!switch` / `!sw`      | Switch AI model on the fly                           |
+| `!switch` / `!sw`      | Switch chat model on the fly                         |
+| `!sw_vision` / `!sv`   | Switch vision model on the fly                       |
 | **Helpers**            |                                                      |
 | `!web`                 | Search the web                                       |
 | `!terminal` / `!t`     | Launch a new detached terminal                       |
@@ -159,31 +160,41 @@ LOLA seamlessly stores your active configurations and sessions via the XDG Base 
 
 ## ⚙️ Configuration
 
-Edit `~/.config/lola/lola.conf` to customize, though MODEL is updated with the `!switch` | `!sw` commands:
+`~/.config/lola/lola.conf` is **auto-generated on first run** with sensible defaults — just edit it afterwards.
+`MODEL` and `VISION_MODEL` are also updated live by `!switch`/`!sw` and `!sw_vision`/`!sv`.
 
 ```conf
-MODEL="qwen3:4b"
-VISION_MODEL="granite3.2-vision:2b"
+MODEL=""
+VISION_MODEL=""
 EDITOR=nvim
 PAGER=nvim
+
+# Terminal emulator for !terminal / !t
+# Wayland: foot, kitty, alacritty, wezterm, ghostty
+# X11:     st, xterm, alacritty, urxvt
+# macOS:   leave unset (defaults to "open -a Terminal")
+TERMINAL="foot"
 
 # Browser for web_search.sh (change to: chromium, brave, xdg-open, etc.)
 BROWSER="firefox"
 
-# Default directory for vision OCR images (leave empty to search $HOME)
+# Default directory for vision image picker (leave empty to search $HOME)
 IMAGE_DIR="$HOME/Pictures/Screenshots/"
 
 # Search engines for web_search.sh
 declare -A SEARCH_ENGINES_CONF
 SEARCH_ENGINES_CONF[brave]="https://search.brave.com/search?q="
 SEARCH_ENGINES_CONF[duck]="https://duckduckgo.com/?q="
+SEARCH_ENGINES_CONF[google]="https://www.google.com/search?q="
+SEARCH_ENGINES_CONF[wikipedia]="https://en.wikipedia.org/wiki/"
+SEARCH_ENGINES_CONF[github]="https://github.com/search?q="
 
 # Agent system prompts
 declare -A AGENTS_CONF
 AGENTS_CONF[default]="You are a helpful assistant."
-AGENTS_CONF[coder]="You are an expert software engineer."
-AGENTS_CONF[writer]="You are a creative writer."
-AGENTS_CONF[teacher]="You are a patient teacher."
+AGENTS_CONF[coder]="You are an expert software engineer. Provide clean, efficient code."
+AGENTS_CONF[writer]="You are a creative writer. Craft engaging content."
+AGENTS_CONF[teacher]="You are a patient teacher. Explain concepts simply."
 AGENTS_CONF[concise]="Be extremely concise. Give only the answer, no filler."
 ```
 
@@ -191,20 +202,19 @@ AGENTS_CONF[concise]="Be extremely concise. Give only the answer, no filler."
 
 ## 🔧 Dependencies
 
-| Tool       | Purpose                                  | Required      |
-|------------|------------------------------------------|---------------|
-| `ollama`   | Local LLM runtime                        | ✅ Yes        |
-| `gum`      | Styled UI (spinner, menus, borders)      | ✅ Yes        |
-| `figlet`   | ASCII banner                             | ✅ Yes        |
-| `fzf`      | Image file picker for `!vision`          | ✅ Yes        |
-| `jq`       | JSON parsing for vision API              | ✅ Yes        |
-| `curl`     | Vision model API calls                   | ✅ Yes        |
-| `nvim`     | Default pager/editor                     | ✅ Yes        |
-| `pbcopy`   | Clipboard on macOS                       | macOS only    |
-| `wl-copy`  | Clipboard on Wayland                     | Wayland only  |
-| `foot`     | Terminal launcher on Wayland             | Wayland only  |
-| `xsel`     | Clipboard on X11                         | X11 only      |
-| `st`       | Terminal launcher on X11                 | X11 only      |
+| Tool       | Purpose                                  | Required               |
+|------------|------------------------------------------|------------------------|
+| `ollama`   | Local LLM runtime                        | ✅ Yes                 |
+| `gum`      | Styled UI (spinner, menus, borders)      | ✅ Yes                 |
+| `figlet`   | ASCII banner                             | ✅ Yes                 |
+| `fzf`      | Image file picker for `!vision`          | ✅ Yes                 |
+| `jq`       | JSON parsing for vision API              | ✅ Yes                 |
+| `curl`     | Vision model API calls                   | ✅ Yes                 |
+| `nvim`     | Default pager/editor                     | ✅ Yes                 |
+| `pbcopy`   | Clipboard on macOS                       | macOS only             |
+| `wl-copy`  | Clipboard on Wayland                     | Wayland only           |
+| `xsel`     | Clipboard on X11                         | X11 only               |
+| *terminal* | Launcher for `!terminal` / `!t`          | set `TERMINAL=` in conf — suggested: `foot` (Wayland), `st` / `xterm` (X11) |
 
 ---
 

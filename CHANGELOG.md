@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.9.0] - 2026-03-03
+
+### Added
+
+-   `!sw_vision` / `!sv` command to switch the vision model on the fly (mirrors `!switch` / `!sw` for `MODEL`).
+    -   Fuzzy-picks from installed models and pre-filters to vision-capable names (`vision`, `llava`, `granite.*vision`, etc.), falling back to the full list when no vision models are detected.
+    -   Persists the selection to `VISION_MODEL` in `lola.conf` and stops the old model cleanly.
+-   `TERMINAL` is now a first-class config option in `lola.conf`.
+    -   Users choose their preferred terminal emulator (`foot`, `kitty`, `alacritty`, `wezterm`, `st`, `xterm`, …).
+    -   The detection block now sets only `COPY_CMD` from the display server; `TERMINAL` reads from config and falls back to a per-platform default (`foot` on Wayland, `st` on X11, `open -a Terminal` on macOS).
+-   `lola.conf` is now **auto-generated on first run** via `write_default_config()`.
+    -   Includes every supported config key with inline comments explaining each option.
+    -   On subsequent runs the file is simply sourced as before.
+
+### Fixed
+
+-   `get_model()` sed regex changed from `s#MODEL=.*#` to `s#^MODEL=.*#`.
+    -   The missing start-of-line anchor caused `!switch` / `!sw` to silently overwrite `VISION_MODEL=` in addition to `MODEL=`.
+
+### Changed
+
+-   `lola.sh`: Removed `foot` and `st` from hard `check_dependencies()` calls; the terminal binary named in `TERMINAL` (config or default) is checked instead.
+-   `lib/models.sh`: Corresponding `^VISION_MODEL=` anchor applied to `get_vision_model()` sed writes.
+-   `lib/ui.sh`: `!sw_vision | !sv` entry added to the in-app help menu under **Models**.
+
+---
+
 ## [1.8.0] - 2026-02-28
 
 ### Added
