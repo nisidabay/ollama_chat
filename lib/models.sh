@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lib/models.sh — LOLA model management: get_model, handle_agent, restart_ollama_server
+# lib/models.sh — LOLA model management: get_model, get_vision_model, handle_agent, restart_ollama_server
 # Guard: must be sourced, not executed directly
 [[ "${BASH_SOURCE[0]}" != "${0}" ]] || { echo "Source this file, don't run it directly." >&2; exit 1; }
 
@@ -37,11 +37,49 @@ get_model() {
 		echo "$MODEL"
 	else
 		# Persist the new model to the config file
+		# ^MODEL= anchors to start-of-line so VISION_MODEL= is never touched
 		printf -v selected_model_quoted '"%s"' "$selected_model"
 		if [[ "$(uname)" == "Darwin" ]]; then
-			sed -i '' "s#MODEL=.*#MODEL=$selected_model_quoted#" "$CONFIG_FILE"
+			sed -i '' "s#^MODEL=.*#MODEL=$selected_model_quoted#" "$CONFIG_FILE"
 		else
-			sed -i "s#MODEL=.*#MODEL=$selected_model_quoted#" "$CONFIG_FILE"
+			sed -i "s#^MODEL=.*#MODEL=$selected_model_quoted#" "$CONFIG_FILE"
+		fi
+		echo "$selected_model"
+	fi
+}
+
+# Select a vision-capable Ollama model and persist the choice to config
+get_vision_model() {
+	local all_models
+	local filter_models
+	local selected_model
+
+	all_models=$(ollama list | awk 'NR>1 {print $1}')
+
+	if [[ -z "$all_models" ]]; then
+		echo "❌ Error: No models available." >&2
+		return 1
+	fi
+
+	# Pre-filter to known vision-capable model name patterns; fall back to all
+	filter_models=$(echo "$all_models" | grep -iE "vision|llava|moondream|bakllava|minicpm|qwen.*vl|granite.*vision" 2>/dev/null)
+	if [[ -z "$filter_models" ]]; then
+		echo "⚠️  No vision models detected by name — showing all models."
+		filter_models="$all_models"
+	fi
+
+	selected_model=$(echo "$filter_models" | menu "Select Vision Model: ")
+
+	if [[ -z "$selected_model" ]]; then
+		# Fall back to the VISION_MODEL set in config
+		echo "$VISION_MODEL"
+	else
+		# Persist choice; ^VISION_MODEL= ensures MODEL= is never touched
+		printf -v selected_model_quoted '"%s"' "$selected_model"
+		if [[ "$(uname)" == "Darwin" ]]; then
+			sed -i '' "s#^VISION_MODEL=.*#VISION_MODEL=$selected_model_quoted#" "$CONFIG_FILE"
+		else
+			sed -i "s#^VISION_MODEL=.*#VISION_MODEL=$selected_model_quoted#" "$CONFIG_FILE"
 		fi
 		echo "$selected_model"
 	fi
