@@ -45,6 +45,11 @@ VISION_MODEL=""
 EDITOR=nvim
 PAGER=nvim
 
+# Lines of chat history fed back to the model as context.
+# Raise for large-context models (e.g. 128K), lower for small ones (e.g. 4K).
+# A rough guide: ~50 lines per exchange; 200 = ~4 exchanges kept in context.
+CONTEXT_LINES=200
+
 # Terminal emulator launched by !terminal / !t
 # Wayland examples: foot, kitty, alacritty, wezterm, ghostty
 # X11 examples:     st, xterm, alacritty, urxvt

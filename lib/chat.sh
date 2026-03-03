@@ -48,7 +48,7 @@ handle_chat() {
 
 	# Read existing conversation from history file (limited to last 200 lines to preserve context window)
 	if [[ -s "$CHAT_HISTORY_FILE" ]]; then
-		conversation_history=$(tail -n 200 "$CHAT_HISTORY_FILE")
+		conversation_history=$(tail -n "${CONTEXT_LINES:-200}" "$CHAT_HISTORY_FILE")
 	fi
 
 	# Build prompt: honesty context + optional agent + history + user input
