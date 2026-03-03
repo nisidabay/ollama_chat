@@ -18,6 +18,8 @@
 
 -   `get_model()` sed regex changed from `s#MODEL=.*#` to `s#^MODEL=.*#`.
     -   The missing start-of-line anchor caused `!switch` / `!sw` to silently overwrite `VISION_MODEL=` in addition to `MODEL=`.
+-   `handle_last()` Remove 'tail'
+    - Pure awk → 100% compatible with macOS (BSD) and Linux, no tail -r needed
 
 ### Changed
 
