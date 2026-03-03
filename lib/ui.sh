@@ -70,6 +70,7 @@ show_menu() {
 		echo ""
 		gum style --foreground 212 --bold "Models"
 		gum style --foreground 245 "  !switch | !sw      Switch AI model on the fly"
+		gum style --foreground 245 "  !sw_vision | !sv   Switch vision model on the fly"
 		echo ""
 		gum style --foreground 212 --bold "Helpers"
 		gum style --foreground 245 "  !web               Search the web"

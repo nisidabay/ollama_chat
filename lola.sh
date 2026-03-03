@@ -34,15 +34,60 @@ fi
 
 WEB_SEARCH="$SCRIPT_DIR/web_search.sh"
 
-# Load configuration
-if [[ -f "$CONFIG_FILE" ]]; then
-	#shellcheck disable=SC1090
-	source "$CONFIG_FILE"
+# ── Default config writer (first-run only) ───────────────────────────────────
+write_default_config() {
+	cat > "$CONFIG_FILE" <<'EOF'
+# LOLA configuration — edit to suit your preferences.
+# Generated automatically on first run.
+
+MODEL=""
+VISION_MODEL=""
+EDITOR=nvim
+PAGER=nvim
+
+# Terminal emulator launched by !terminal / !t
+# Wayland examples: foot, kitty, alacritty, wezterm, ghostty
+# X11 examples:     st, xterm, alacritty, urxvt
+# macOS:            leave unset (defaults to "open -a Terminal")
+TERMINAL="foot"
+
+# Browser for web_search.sh (change to: chromium, brave, xdg-open, etc.)
+BROWSER="firefox"
+
+# Default directory for vision image picker (leave empty to search $HOME)
+IMAGE_DIR="$HOME/Pictures/Screenshots/"
+
+# Search engines for web_search.sh
+declare -A SEARCH_ENGINES_CONF
+SEARCH_ENGINES_CONF[brave]="https://search.brave.com/search?q="
+SEARCH_ENGINES_CONF[duck]="https://duckduckgo.com/?q="
+SEARCH_ENGINES_CONF[google]="https://www.google.com/search?q="
+SEARCH_ENGINES_CONF[wikipedia]="https://en.wikipedia.org/wiki/"
+SEARCH_ENGINES_CONF[github]="https://github.com/search?q="
+
+# Agent system prompts
+declare -A AGENTS_CONF
+AGENTS_CONF[default]="You are a helpful assistant."
+AGENTS_CONF[coder]="You are an expert software engineer. Provide clean, efficient code and explain your reasoning."
+AGENTS_CONF[writer]="You are a creative writer. Craft engaging and imaginative content."
+AGENTS_CONF[teacher]="You are a patient teacher. Explain concepts simply and clearly."
+AGENTS_CONF[concise]="Be extremely concise. Give only the answer, no filler."
+EOF
+	echo "✅ Default config written to $CONFIG_FILE"
+	echo "💡 Edit it to set your MODEL, VISION_MODEL, TERMINAL, and more."
+	echo ""
+}
+
+# Load configuration — write defaults on first run
+if [[ ! -f "$CONFIG_FILE" ]]; then
+	write_default_config
 fi
+#shellcheck disable=SC1090
+source "$CONFIG_FILE"
 
 # Global state
 CURRENT_AGENT_CONTEXT=""
-VERSION='1.8'
+VERSION='1.9'
 PROMPT="You: "
 touch "$CHAT_HISTORY_FILE"
 
@@ -64,21 +109,24 @@ check_dependencies() {
 }
 
 # ── Environment detection (macOS vs Linux) ───────────────────────────────────
-# Only TERMINAL and COPY_CMD differ per display server.
+# COPY_CMD is auto-detected from the display server.
+# TERMINAL is read from lola.conf; a sane default is provided if unset.
 # All menus use gum filter (pure terminal, identical on both).
 if [[ "$(uname)" == "Darwin" ]]; then
-    check_dependencies "pbcopy"
-    TERMINAL="open -a Terminal"
-    COPY_CMD="pbcopy"
+	check_dependencies "pbcopy"
+	TERMINAL="${TERMINAL:-open -a Terminal}"
+	COPY_CMD="pbcopy"
 elif [[ -n "$WAYLAND_DISPLAY" ]]; then
-	check_dependencies "foot" "wl-copy"
-	TERMINAL="foot"
+	check_dependencies "wl-copy"
+	TERMINAL="${TERMINAL:-foot}"
 	COPY_CMD="wl-copy"
 else
-	check_dependencies "st" "xsel"
-	TERMINAL="st"
+	check_dependencies "xsel"
+	TERMINAL="${TERMINAL:-st}"
 	COPY_CMD="xsel -ib"
 fi
+# Verify the user-configured (or default) terminal emulator is present
+check_dependencies "${TERMINAL%% *}"
 
 # Unified inline fuzzy menu (gum filter — works on Wayland and X11)
 menu() {
@@ -164,6 +212,15 @@ main() {
 				#shellcheck disable=SC1090
 				source "$CONFIG_FILE"
 				echo "🧠 Switched to $MODEL."
+				;;
+			"!sw_vision" | "!sv")
+				OLD_VISION="$VISION_MODEL"
+				VISION_MODEL=$(get_vision_model)
+				[[ -n "$OLD_VISION" && "$OLD_VISION" != "$VISION_MODEL" ]] && \
+					ollama stop "$OLD_VISION" &>/dev/null
+				#shellcheck disable=SC1090
+				source "$CONFIG_FILE"
+				echo "👁️  Vision model switched to $VISION_MODEL."
 				;;
 			"!save" | "!sa")       handle_save ;;
 			"!load" | "!lo")       clear; handle_load ;;
