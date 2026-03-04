@@ -13,6 +13,8 @@
 -   `lola.conf` is now **auto-generated on first run** via `write_default_config()`.
     -   Includes every supported config key with inline comments explaining each option.
     -   On subsequent runs the file is simply sourced as before.
+-   Created `startup_screen` function to display a consistent welcome screen with model info and version.
+-   Unified `!clear`, `!new_chat`, and `!new` commands to share the same functionality, clearing the screen and displaying the startup screen.
 
 ### Fixed
 
