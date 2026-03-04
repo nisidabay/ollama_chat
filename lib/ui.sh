@@ -58,7 +58,7 @@ show_menu() {
 		--padding "1 3" \
 		--margin "1 0" \
 		"$(
-			cat <<'MENU'
+			cat <<MENU
 LOLA — Local Ollama Language Assistant  v$VERSION
 
 Usage
