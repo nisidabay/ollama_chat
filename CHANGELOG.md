@@ -20,6 +20,9 @@
     -   The missing start-of-line anchor caused `!switch` / `!sw` to silently overwrite `VISION_MODEL=` in addition to `MODEL=`.
 -   `handle_last()` Remove 'tail'
     - Pure awk → 100% compatible with macOS (BSD) and Linux, no tail -r needed
+-   `lib/ui.sh`: `show_menu()` performance regression fixed.
+    -   Refactored from 22+ subprocess `gum style` calls to a single call using a heredoc, reducing menu load time from ~300-500ms to <10ms.
+    -   Menu content is static and no longer requires repeated subprocess invocations; display logic remains identical.
 
 ### Changed
 

@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # lib/ui.sh — LOLA UI helpers: banner, separators, styled output, help menu
 # Guard: must be sourced, not executed directly
-[[ "${BASH_SOURCE[0]}" != "${0}" ]] || { echo "Source this file, don't run it directly." >&2; exit 1; }
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] || {
+	echo "Source this file, don't run it directly." >&2
+	exit 1
+}
 
 # Terminal width for dynamic sizing
 COLS=$(tput cols 2>/dev/null || echo 80)
@@ -49,46 +52,46 @@ running_tmux() {
 
 # Styled help menu rendered inside a rounded gum border
 show_menu() {
-	local menu_content
-	menu_content=$(
-		gum style --foreground 212 --bold "LOLA — Local Ollama Language Assistant  v$VERSION"
-		echo ""
-		gum style --foreground 212 --bold "Usage"
-		gum style --foreground 245 "  !menu | !m         Show this help menu"
-		echo ""
-		gum style --foreground 212 --bold "History"
-		gum style --foreground 245 "  !clear             Clear the chat history"
-		gum style --foreground 245 "  !history | !his    View the chat history"
-		gum style --foreground 245 "  !last              Copy last response to clipboard"
-		echo ""
-		gum style --foreground 212 --bold "Chat"
-		gum style --foreground 245 "  !load | !lo        Load a saved chat"
-		gum style --foreground 245 "  !save | !sa        Save current chat"
-		gum style --foreground 245 "  !edit_saved | !es  Edit a saved chat"
-		gum style --foreground 245 "  !new_chat | !new   Start a new chat"
-		gum style --foreground 245 "  !rm                Remove a saved chat"
-		echo ""
-		gum style --foreground 212 --bold "Models"
-		gum style --foreground 245 "  !switch | !sw      Switch AI model on the fly"
-		gum style --foreground 245 "  !sw_vision | !sv   Switch vision model on the fly"
-		echo ""
-		gum style --foreground 212 --bold "Helpers"
-		gum style --foreground 245 "  !web               Search the web"
-		gum style --foreground 245 "  !terminal | !t     Launch a new detached terminal"
-		gum style --foreground 245 "  !vision | !img     Analyze image (JPG/PNG only)"
-		gum style --foreground 245 "  !agent | !a        Switch agent persona"
-		echo ""
-		gum style --foreground 212 --bold "Script"
-		gum style --foreground 245 "  !edit_config | !ec Edit lola.conf inline"
-		gum style --foreground 245 "  !kill | !k         Stop Ollama and exit"
-		gum style --foreground 245 "  exit | quit        Quit the script"
-		echo ""
-		gum style --foreground 214 "◆ Tip: Paste a block of text and press Ctrl+D to submit"
-	)
 	gum style \
 		--border rounded \
 		--border-foreground 212 \
 		--padding "1 3" \
 		--margin "1 0" \
-		"$menu_content"
+		"$(
+			cat <<'MENU'
+LOLA — Local Ollama Language Assistant  v$VERSION
+
+Usage
+  !menu | !m         Show this help menu
+
+History
+  !clear             Clear the chat history
+  !history | !his    View the chat history
+  !last              Copy last response to clipboard
+
+Chat
+  !load | !lo        Load a saved chat
+  !save | !sa        Save current chat
+  !edit_saved | !es  Edit a saved chat
+  !new_chat | !new   Start a new chat
+  !rm                Remove a saved chat
+
+Models
+  !switch | !sw      Switch AI model on the fly
+  !sw_vision | !sv   Switch vision model on the fly
+
+Helpers
+  !web               Search the web
+  !terminal | !t     Launch a new detached terminal
+  !vision | !img     Analyze image (JPG/PNG only)
+  !agent | !a        Switch agent persona
+
+Script
+  !edit_config | !ec Edit lola.conf inline
+  !kill | !k         Stop Ollama and exit
+  exit | quit        Quit the script
+
+◆ Tip: Paste a block of text and press Ctrl+D to submit
+MENU
+		)"
 }
