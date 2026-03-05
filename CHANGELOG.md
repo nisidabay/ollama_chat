@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.0.0] - 2026-03-05
+
+### Added
+
+-   **Automatic context-window sizing** via the new `auto_context_lines()` helper function (in `lib/helpers.sh`).
+    -   Queries the Ollama `/api/show` endpoint for the active model's `context_length`.
+    -   Computes `context_length / 40` (50 % of context ÷ ~20 tokens per line), capped at 5 000.
+    -   Falls back to 200 lines if the API is unreachable.
+    -   Runs at startup (after the model is resolved) and again on every `!switch` / `!sw`.
+-   New `CONTEXT_LINES=auto` mode in `lola.conf`.
+    -   Fresh installs default to `auto`; explicit numeric values are still honoured.
+-   **Terminal emulator auto-detection**.
+    -   When `TERMINAL` is empty (the new default), LOLA probes for common emulators in platform-aware order and uses the first one found.
+    -   Wayland probe order: `foot`, `kitty`, `alacritty`, `wezterm`, `ghostty`, `xterm`.
+    -   X11 probe order: `alacritty`, `kitty`, `st`, `wezterm`, `xterm`.
+    -   macOS defaults to `open -a Terminal`.
+    -   A missing terminal now prints a warning instead of exiting the script — only the `!terminal` command is affected.
+
+### Removed
+
+-   `test_context.sh` — its logic has been absorbed into `auto_context_lines()`.
+
+### Changed
+
+-   `lola.sh`: Default config template now writes `CONTEXT_LINES=auto` instead of `CONTEXT_LINES=200`.
+-   `lola.sh`: `!switch` / `!sw` handler recalculates `CONTEXT_LINES` after a model change when set to `auto`.
+-   `lola.sh`: Default config template now writes `TERMINAL=""` instead of `TERMINAL="foot"`.
+-   `lola.sh`: Environment detection block replaced with a probe-based fallback chain; `check_dependencies` call for the terminal replaced with a friendly warning.
+
+---
+
 ## [1.9.0] - 2026-03-03
 
 ### Added
