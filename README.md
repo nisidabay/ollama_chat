@@ -22,6 +22,7 @@ terminal on both X11 and Wayland
 - 🖼️ **Vision analysis** — analyze images via a local vision model with `!vision`
 - 🌐 **Web search** — launch a background web search with `!web`
 - 📝 **Multi-line input** — paste a block of text and press `Ctrl+D` to submit
+- 📐 **Auto context-window sizing** — detects the model's token limit and tunes history depth automatically (`CONTEXT_LINES=auto`)
 - 🗂️ **Modular codebase** — clean `lib/` structure, easy to extend
 
 ---
@@ -112,9 +113,8 @@ Type `exit` or `quit` to leave cleanly.
 | Command                | Description                                          |
 |------------------------|------------------------------------------------------|
 | **Usage**              |                                                      |
-| `!menu` / `!m`         | Show the help menu                                   |
+| `!menu` / `!m`         | Show this help menu                                  |
 | **History**            |                                                      |
-| `!clear`               | Clear the chat history                               |
 | `!history` / `!his`    | View the chat history                                |
 | `!last`                | Copy last response to clipboard                      |
 | **Chat**               |                                                      |
@@ -122,9 +122,10 @@ Type `exit` or `quit` to leave cleanly.
 | `!save` / `!sa`        | Save current chat                                    |
 | `!edit_saved` / `!es`  | Edit a saved chat                                    |
 | `!new_chat` / `!new`   | Start a new chat                                     |
+| `!clear`               | Start a new chat                                     |
 | `!rm`                  | Remove a saved chat                                  |
 | **Models**             |                                                      |
-| `!switch` / `!sw`      | Switch chat model on the fly                         |
+| `!switch` / `!sw`      | Switch AI model on the fly                           |
 | `!sw_vision` / `!sv`   | Switch vision model on the fly                       |
 | **Helpers**            |                                                      |
 | `!web`                 | Search the web                                       |
@@ -133,7 +134,7 @@ Type `exit` or `quit` to leave cleanly.
 | `!agent` / `!a`        | Switch agent persona                                 |
 | **Script**             |                                                      |
 | `!edit_config` / `!ec` | Edit `lola.conf` inline                              |
-| `!kill` / `!k`         | Stop Ollama server and exit                          |
+| `!kill` / `!k`         | Stop Ollama and exit                                 |
 | `exit` / `quit`        | Quit the script                                      |
 
 ---
@@ -169,11 +170,15 @@ VISION_MODEL=""
 EDITOR=nvim
 PAGER=nvim
 
+# Set to "auto" to let LOLA detect the model's context window and calculate
+# the optimal value automatically. Set a number (e.g. 200) to override.
+CONTEXT_LINES=auto
+
 # Terminal emulator for !terminal / !t
-# Wayland: foot, kitty, alacritty, wezterm, ghostty
-# X11:     st, xterm, alacritty, urxvt
-# macOS:   leave unset (defaults to "open -a Terminal")
-TERMINAL="foot"
+# Leave empty to auto-detect the first available emulator.
+# Examples: foot, kitty, alacritty, wezterm, ghostty, st, xterm
+# macOS:   leave empty (defaults to "open -a Terminal")
+TERMINAL=""
 
 # Browser for web_search.sh (change to: chromium, brave, xdg-open, etc.)
 BROWSER="firefox"
@@ -214,7 +219,7 @@ AGENTS_CONF[concise]="Be extremely concise. Give only the answer, no filler."
 | `pbcopy`   | Clipboard on macOS                       | macOS only             |
 | `wl-copy`  | Clipboard on Wayland                     | Wayland only           |
 | `xsel`     | Clipboard on X11                         | X11 only               |
-| *terminal* | Launcher for `!terminal` / `!t`          | set `TERMINAL=` in conf — suggested: `foot` (Wayland), `st` / `xterm` (X11) |
+| *terminal* | Launcher for `!terminal` / `!t`          | Auto-detected; set `TERMINAL=` in conf to override |
 
 ---
 
