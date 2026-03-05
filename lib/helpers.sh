@@ -3,6 +3,31 @@
 # Guard: must be sourced, not executed directly
 [[ "${BASH_SOURCE[0]}" != "${0}" ]] || { echo "Source this file, don't run it directly." >&2; exit 1; }
 
+# Compute optimal CONTEXT_LINES from a model's token context window.
+# Queries the Ollama /api/show endpoint and returns: context_length / 40
+# (50% of context ÷ ~20 tokens/line), capped at 5000.
+# Falls back to 4096 tokens (→ 102 lines) on any error.
+auto_context_lines() {
+  local model="$1"
+  local response max_ctx safe_lines
+
+  response=$(curl -s --max-time 2 -X POST http://localhost:11434/api/show \
+    -d "{\"name\": \"$model\"}" 2>/dev/null) || { echo 200; return; }
+
+  if command -v jq > /dev/null 2>&1; then
+    max_ctx=$(echo "$response" | jq -r \
+      '.model_info | to_entries[] | select(.key | contains("context_length")) | .value' 2>/dev/null)
+  else
+    max_ctx=$(echo "$response" | grep -oP '"[^"]*context_length":\s*\K\d+')
+  fi
+
+  max_ctx=${max_ctx:-4096}
+  safe_lines=$((max_ctx / 40))
+  [[ "$safe_lines" -gt 5000 ]] && safe_lines=5000
+
+  echo "$safe_lines"
+}
+
 # Launch web search in the foreground (interactive — needs a TTY for gum)
 handle_web() {
 	bash "$WEB_SEARCH"
