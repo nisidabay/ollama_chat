@@ -46,15 +46,15 @@ EDITOR=nvim
 PAGER=nvim
 
 # Lines of chat history fed back to the model as context.
-# Raise for large-context models (e.g. 128K), lower for small ones (e.g. 4K).
-# A rough guide: ~50 lines per exchange; 200 = ~4 exchanges kept in context.
-CONTEXT_LINES=200
+# Set to "auto" to let LOLA detect the model's context window and calculate
+# the optimal value automatically. Set a number (e.g. 200) to override.
+CONTEXT_LINES=auto
 
 # Terminal emulator launched by !terminal / !t
-# Wayland examples: foot, kitty, alacritty, wezterm, ghostty
-# X11 examples:     st, xterm, alacritty, urxvt
-# macOS:            leave unset (defaults to "open -a Terminal")
-TERMINAL="foot"
+# Leave empty to auto-detect the first available emulator.
+# Examples: foot, kitty, alacritty, wezterm, ghostty, st, xterm
+# macOS:   leave empty (defaults to "open -a Terminal")
+TERMINAL=""
 
 # Browser for web_search.sh (change to: chromium, brave, xdg-open, etc.)
 BROWSER="firefox"
@@ -115,23 +115,37 @@ check_dependencies() {
 
 # ── Environment detection (macOS vs Linux) ───────────────────────────────────
 # COPY_CMD is auto-detected from the display server.
-# TERMINAL is read from lola.conf; a sane default is provided if unset.
+# TERMINAL is read from lola.conf; if empty, the first available emulator is used.
 # All menus use gum filter (pure terminal, identical on both).
 if [[ "$(uname)" == "Darwin" ]]; then
   check_dependencies "pbcopy"
-  TERMINAL="${TERMINAL:-open -a Terminal}"
   COPY_CMD="pbcopy"
+  if [[ -z "$TERMINAL" ]]; then
+    TERMINAL="open -a Terminal"
+  fi
 elif [[ -n "$WAYLAND_DISPLAY" ]]; then
   check_dependencies "wl-copy"
-  TERMINAL="${TERMINAL:-foot}"
   COPY_CMD="wl-copy"
+  if [[ -z "$TERMINAL" ]]; then
+    for _term in foot kitty alacritty wezterm ghostty xterm; do
+      if command -v "$_term" > /dev/null; then TERMINAL="$_term"; break; fi
+    done
+  fi
 else
   check_dependencies "xsel"
-  TERMINAL="${TERMINAL:-st}"
   COPY_CMD="xsel -ib"
+  if [[ -z "$TERMINAL" ]]; then
+    for _term in alacritty kitty st wezterm xterm; do
+      if command -v "$_term" > /dev/null; then TERMINAL="$_term"; break; fi
+    done
+  fi
 fi
-# Verify the user-configured (or default) terminal emulator is present
-check_dependencies "${TERMINAL%% *}"
+# Warn (don't exit) if no terminal emulator was found — only !terminal is affected
+if [[ -z "$TERMINAL" ]]; then
+  echo "⚠️  No terminal emulator found. Install one or set TERMINAL in lola.conf." >&2
+elif ! command -v "${TERMINAL%% *}" > /dev/null; then
+  echo "⚠️  Terminal '$TERMINAL' not found. Install it or update TERMINAL in lola.conf." >&2
+fi
 
 # Unified inline fuzzy menu (gum filter — works on Wayland and X11)
 menu() {
@@ -176,6 +190,11 @@ main() {
   # Prompt for model selection if none configured
   if [[ -z "$MODEL" ]]; then
     MODEL=$(get_model)
+  fi
+
+  # Auto-detect optimal CONTEXT_LINES from the model's context window
+  if [[ "${CONTEXT_LINES}" == "auto" ]]; then
+    CONTEXT_LINES=$(auto_context_lines "$MODEL")
   fi
 
   # ── Interactive loop ──────────────────────────────────────────────────────
@@ -227,6 +246,10 @@ main() {
           ollama stop "$OLD_MODEL" &> /dev/null
           #shellcheck disable=SC1090
           source "$CONFIG_FILE"
+          # Recalculate context window for the new model
+          if [[ "${CONTEXT_LINES}" == "auto" ]]; then
+            CONTEXT_LINES=$(auto_context_lines "$MODEL")
+          fi
           echo "🧠 Switched to $MODEL."
           ;;
         "!sw_vision" | "!sv")
