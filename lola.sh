@@ -92,7 +92,7 @@ source "$CONFIG_FILE"
 
 # Global state
 CURRENT_AGENT_CONTEXT=""
-VERSION='1.9'
+VERSION='2.0'
 PROMPT="You: "
 touch "$CHAT_HISTORY_FILE"
 
@@ -128,7 +128,10 @@ elif [[ -n "$WAYLAND_DISPLAY" ]]; then
   COPY_CMD="wl-copy"
   if [[ -z "$TERMINAL" ]]; then
     for _term in foot kitty alacritty wezterm ghostty xterm; do
-      if command -v "$_term" > /dev/null; then TERMINAL="$_term"; break; fi
+      if command -v "$_term" > /dev/null; then
+        TERMINAL="$_term"
+        break
+      fi
     done
   fi
 else
@@ -136,7 +139,10 @@ else
   COPY_CMD="xsel -ib"
   if [[ -z "$TERMINAL" ]]; then
     for _term in alacritty kitty st wezterm xterm; do
-      if command -v "$_term" > /dev/null; then TERMINAL="$_term"; break; fi
+      if command -v "$_term" > /dev/null; then
+        TERMINAL="$_term"
+        break
+      fi
     done
   fi
 fi
