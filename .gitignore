@@ -1,0 +1,21 @@
+# Logs and chat sessions
+*.log
+chat_*.txt
+
+# macOS
+.DS_Store
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+.nvim/
+
+# Backup files created during development
+*.bak
+ollama_explain.sh
+ollama_explain.conf
+ollama_explain_bak.sh
+
+# Skill registry and SDD artifacts (local only)
+.atl/

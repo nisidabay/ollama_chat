@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # lib/models.sh — LOLA model management: get_model, get_vision_model, handle_agent, restart_ollama_server
 # Guard: must be sourced, not executed directly
-[[ "${BASH_SOURCE[0]}" != "${0}" ]] || { echo "Source this file, don't run it directly." >&2; exit 1; }
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] || {
+	echo "Source this file, don't run it directly." >&2
+	exit 1
+}
 
 # Restart the Ollama server
 restart_ollama_server() {
@@ -19,15 +22,32 @@ restart_ollama_server() {
 }
 
 # Select an Ollama model via gum filter and persist the choice to config
+# Uses cache with 60-second TTL to avoid repeated ollama list calls
 get_model() {
 	local filter_models
 	local selected_model
+	local cache_key="models_list"
+	local TTL_SECONDS=60
 
-	filter_models=$(ollama list | awk 'NR>1 {print $1}')
+	# Try cache first
+	filter_models=$(cache_get "$cache_key") || {
+		# Cache miss — fetch from ollama
+		filter_models=$(ollama list | awk 'NR>1 {print $1}') || {
+			# ollama list failed — invalidate cache and report error
+			cache_invalidate "$cache_key"
+			echo "❌ Error: Failed to list models. Is Ollama running?" >&2
+			return 1
+		}
+
+		# Cache the result
+		if [[ -n "$filter_models" ]]; then
+			cache_set "$cache_key" "$filter_models" "$TTL_SECONDS"
+		fi
+	}
 
 	if [[ -z "$filter_models" ]]; then
 		echo "❌ Error: No models available." >&2
-		exit 1
+		return 1
 	fi
 
 	selected_model=$(echo "$filter_models" | menu "Select Ollama Model: ")
@@ -49,12 +69,29 @@ get_model() {
 }
 
 # Select a vision-capable Ollama model and persist the choice to config
+# Uses cache with 60-second TTL to avoid repeated ollama list calls
 get_vision_model() {
 	local all_models
 	local filter_models
 	local selected_model
+	local cache_key="models_list"
+	local TTL_SECONDS=60
 
-	all_models=$(ollama list | awk 'NR>1 {print $1}')
+	# Try cache first
+	all_models=$(cache_get "$cache_key") || {
+		# Cache miss — fetch from ollama
+		all_models=$(ollama list | awk 'NR>1 {print $1}') || {
+			# ollama list failed — invalidate cache and report error
+			cache_invalidate "$cache_key"
+			echo "❌ Error: Failed to list models. Is Ollama running?" >&2
+			return 1
+		}
+
+		# Cache the result
+		if [[ -n "$all_models" ]]; then
+			cache_set "$cache_key" "$all_models" "$TTL_SECONDS"
+		fi
+	}
 
 	if [[ -z "$all_models" ]]; then
 		echo "❌ Error: No models available." >&2

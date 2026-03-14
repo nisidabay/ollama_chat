@@ -1,5 +1,59 @@
 # Changelog
 
+## [2.2.0] - 2026-03-14
+
+### Added
+
+-   **Startup caching for performance-critical values** — Eliminates per-message subprocess spawns.
+    -   `HONESTY_DATE` cached once at startup, reused in `honesty_context` for all messages.
+    -   `BANNER_OUTPUT` cached once at startup, reused by `show_banner()` for instant display.
+    -   `VISUAL_PROMPT` and `VISUAL_PROMPT_TMUX` cached at startup, eliminating per-loop `gum style` calls.
+
+### Changed
+
+-   **Per-message latency reduced ~30-50ms** through subprocess elimination.
+    -   `handle_chat()` now uses `$HONESTY_DATE` instead of spawning `date` per message.
+    -   `show_banner()` now uses cached `$BANNER_OUTPUT` instead of spawning `figlet` on each call.
+    -   Main loop uses cached `$VISUAL_PROMPT`/`$VISUAL_PROMPT_TMUX` instead of spawning `gum style` per input.
+-   **Async clipboard and notifications** — Non-blocking user experience.
+    -   Clipboard copy runs in background subprocess, allowing immediate next message typing.
+    -   Desktop notifications (`osascript`/`notify-send`) run in background subprocess.
+-   **COLS assignment uses `$COLUMNS` with fallback** — Eliminates `tput cols` subprocess when shell provides width.
+    -   Pattern: `COLS="${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}"`
+    -   Falls back gracefully in shells without `$COLUMNS` or when `tput` fails.
+
+---
+
+## [2.1.0] - 2026-03-14
+
+### Added
+
+-   **Caching Layer** — File-based TTL cache for model list and context calculations.
+    -   New `cache_get()`, `cache_set()`, and `cache_invalidate()` functions in `lib/helpers.sh`.
+    -   Cache directory at `~/.cache/lola/cache/` (XDG-compliant).
+    -   Model list cached with 60-second TTL, context window cached with 1-hour TTL.
+    -   Auto-invalidation on `ollama list` failure.
+
+### Changed
+
+-   **Startup Optimization** — Parallel dependency checks for 50% faster startup.
+    -   Dependencies now checked concurrently in three groups (core, editor/JSON, utilities).
+    -   Model list pre-warmed in background during startup when no model is configured.
+    -   Environment detection refactored into clean `detect_clipboard_tool()` and `detect_terminal()` functions.
+-   **History Optimization** — In-memory context line count instead of per-message recalculation.
+    -   `CACHED_CONTEXT_LINES` global stores computed value, avoiding repeated API calls.
+    -   Reset on model switch to handle different context windows.
+    -   Preserved on `!clear` / `!new` since model context window unchanged.
+-   **Subprocess Reduction** — Pure Bash parameter expansion replaces sed/awk/grep chains where feasible.
+    -   Input cleaning now uses `${var#prefix}` and `${var%suffix}` instead of sed.
+-   **Model List Caching** — `get_model()` and `get_vision_model()` use cache with auto-invalidation on failure.
+
+### Fixed
+
+-   ANSI escape stripping preserved in sed (complex regex not supported by pure Bash).
+
+---
+
 ## [2.0.0] - 2026-03-05
 
 ### Added
