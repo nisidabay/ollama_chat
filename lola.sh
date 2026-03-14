@@ -93,7 +93,7 @@ source "$CONFIG_FILE"
 # Global state
 CURRENT_AGENT_CONTEXT=""
 CACHED_CONTEXT_LINES="" # Cached context line count per model (avoids repeated auto_context_lines calls)
-VERSION='2.0'
+VERSION='2.2.0'
 PROMPT="You: "
 touch "$CHAT_HISTORY_FILE"
 
